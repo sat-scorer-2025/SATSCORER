@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-export const authMiddleware = async (req, res, next) => {
+dotenv.config();
+
+const authMiddleware = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
@@ -8,15 +11,10 @@ export const authMiddleware = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-
-    // For admin-specific routes, check role
-    if (req.path.includes('/users') || req.path.includes('/inactive') || req.path.includes('/status')) {
-      if (decoded.role !== 'admin') {
-        return res.status(403).json({ message: 'Access denied. Admin privileges required' });
-      }
-    }
-
+    req.user = {
+      userId: decoded.userId,
+      role: decoded.role,
+    };
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
@@ -24,3 +22,4 @@ export const authMiddleware = async (req, res, next) => {
   }
 };
 
+export { authMiddleware };

@@ -1,10 +1,18 @@
 import React from 'react';
 
 const Timer = ({ timeLeft, totalDuration }) => {
+  // Manual prop validation
+  if (typeof timeLeft !== 'number' || timeLeft < 0) {
+    timeLeft = 0;
+  }
+  if (typeof totalDuration !== 'number' || totalDuration <= 0) {
+    totalDuration = 0;
+  }
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const progress = totalDuration ? ((totalDuration - timeLeft) / totalDuration) * 100 : 0;

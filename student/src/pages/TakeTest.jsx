@@ -7,7 +7,7 @@ import TestDetails from '../components/StudentDashboard/ViewCourse/TestDetails';
 const TakeTest = () => {
   const { enrolledcourseId, testId } = useParams();
   const navigate = useNavigate();
-  const { fetchTestDetails, fetchQuestionsForTest, fetchResult } = useStudentContext();
+  const { fetchTestDetails, fetchQuestionsForTest, fetchResult, submitTestResult } = useStudentContext();
   const [test, setTest] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -28,22 +28,24 @@ const TakeTest = () => {
       const results = await fetchResult();
       const attempts = results.filter(result => result.testId._id === testId).length;
       const testData = await fetchTestDetails(testId);
+
       if (!testData) {
         setError('Failed to load test details');
         return;
       }
+
       if (testData.noOfAttempts && attempts >= testData.noOfAttempts) {
         setAttemptsExceeded(true);
         return;
       }
 
       setTest(testData);
-
       const questionsData = await fetchQuestionsForTest(testId);
       if (!questionsData || questionsData.length === 0) {
         setError('No questions found for this test');
         return;
       }
+
       setQuestions(questionsData);
 
       // Initialize timeLeft based on test duration
@@ -69,7 +71,7 @@ const TakeTest = () => {
   }, [loadTestData]);
 
   useEffect(() => {
-    if (timeLeft === null || timeLeft <= 0 || !showDetails) return;
+    if (timeLeft === null || timeLeft <= 0 || showDetails) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -110,8 +112,44 @@ const TakeTest = () => {
   }, []);
 
   const handleAutoSubmit = useCallback(async () => {
-    navigate(`/studentdashboard/mycourses/viewcourse/${enrolledcourseId}/tests`);
-  }, [navigate, enrolledcourseId]);
+    await handleSubmit();
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
+    try {
+      // Calculate score (1 point per correct answer)
+      let score = 0;
+      const questionDetails = await fetchQuestionsForTest(testId);
+      const answersToSubmit = Object.entries(answers).map(([questionId, selectedAnswer]) => {
+        const question = questionDetails.find(q => q._id === questionId);
+        if (question) {
+          if (question.type === 'mcq' && selectedAnswer === question.correctAnswer) {
+            score += 1;
+          } else if (question.type === 'checkbox') {
+            const sortedSelected = Array.isArray(selectedAnswer) ? [...selectedAnswer].sort() : [];
+            const sortedCorrect = Array.isArray(question.correctAnswer) ? [...question.correctAnswer].sort() : [];
+            if (sortedSelected.length === sortedCorrect.length && sortedSelected.every((val, idx) => val === sortedCorrect[idx])) {
+              score += 1;
+            }
+          }
+          // Short/paragraph questions may need manual scoring
+        }
+        return { questionId, selectedAnswer };
+      });
+
+      const result = await submitTestResult(testId, score, answersToSubmit);
+      if (result) {
+        // Clear local storage
+        localStorage.removeItem(`timeLeft_${testId}`);
+        localStorage.removeItem(`testAnswers_${testId}`);
+        navigate(`/testreview/${enrolledcourseId}/${testId}`);
+      } else {
+        setError('Failed to submit test');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to submit test');
+    }
+  }, [testId, answers, submitTestResult, fetchQuestionsForTest, navigate, enrolledcourseId]);
 
   const handleStartTest = () => {
     setShowDetails(false);
@@ -180,6 +218,8 @@ const TakeTest = () => {
           onNext={currentQuestionIndex < questions.length - 1 ? handleNext : null}
           onQuestionClick={handleQuestionClick}
           timeLeft={timeLeft}
+          totalDuration={test.duration * 60}
+          onSubmit={handleSubmit}
         />
       )}
     </>

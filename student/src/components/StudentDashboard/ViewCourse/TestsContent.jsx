@@ -13,37 +13,44 @@ const TestsContent = () => {
   const [hasFetchedTests, setHasFetchedTests] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const loadTests = async () => {
-      if (hasFetchedTests || !enrolledcourseId) return;
-      setLoading(true);
-      try {
-        const testData = await fetchTestsForCourse(enrolledcourseId);
-        if (!testData) {
-          setError('Failed to load tests');
-          setTests([]);
-          return;
-        }
-        setTests(testData);
-        setError(null);
+  const loadTests = async () => {
+    if (hasFetchedTests || !enrolledcourseId) return;
+    setLoading(true);
+    try {
+      // Fetch tests for the course
+      const testData = await fetchTestsForCourse(enrolledcourseId);
+      if (!testData) {
+        setError('Failed to load tests');
+        setTests([]);
+        return;
+      }
+      setTests(testData);
+      setError(null);
 
-        // Fetch attempts for each test
+      // Fetch test results (optional, won't block test display)
+      try {
         const results = await fetchResult();
         const resultsByTest = {};
         testData.forEach(test => {
           resultsByTest[test._id] = results.filter(result => result.testId._id === test._id);
         });
         setTestResults(resultsByTest);
-      } catch (err) {
-        console.error('Error loading tests:', err);
-        setError(err.message || 'Failed to load tests');
-        setTests([]);
-      } finally {
-        setLoading(false);
-        setHasFetchedTests(true);
+      } catch (resultErr) {
+        console.warn('Failed to fetch test results:', resultErr.message);
+        // Don't set error state; allow tests to display
+        setTestResults({});
       }
-    };
+    } catch (err) {
+      console.error('Error loading tests:', err);
+      setError(err.message || 'Failed to load tests');
+      setTests([]);
+    } finally {
+      setLoading(false);
+      setHasFetchedTests(true);
+    }
+  };
 
+  useEffect(() => {
     loadTests();
   }, [enrolledcourseId, fetchTestsForCourse, fetchResult, hasFetchedTests]);
 
@@ -119,7 +126,7 @@ const TestsContent = () => {
 
   return (
     <div className="p-6 sm:p-8 bg-white min-h-screen animate-fade-in">
-      <div className="max-w-8xl Mx-auto">
+      <div className="max-w-8xl mx-auto">
         <h2 className="text-3xl sm:text-4xl font-['Inter',sans-serif] font-bold text-gray-800 flex items-center mb-8">
           <DocumentTextIcon className="w-10 h-10 mr-3 text-green-500" />
           Tests

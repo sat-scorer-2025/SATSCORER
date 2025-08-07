@@ -19,6 +19,7 @@ const submitTestResult = async (req, res) => {
     if (!mongoose.isValidObjectId(testId)) {
       return res.status(400).json({ message: 'Invalid test ID' });
     }
+
     if (!mongoose.isValidObjectId(userId)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
@@ -50,6 +51,7 @@ const submitTestResult = async (req, res) => {
     if (!Array.isArray(answers)) {
       return res.status(400).json({ message: 'Answers must be an array' });
     }
+
     if (answers.length === 0) {
       return res.status(400).json({ message: 'At least one answer is required' });
     }
@@ -62,22 +64,27 @@ const submitTestResult = async (req, res) => {
       if (!mongoose.isValidObjectId(answer.questionId)) {
         return res.status(400).json({ message: `Invalid question ID: ${answer.questionId}` });
       }
+
       // Check if question belongs to the test
       if (!questionIds.includes(answer.questionId)) {
         return res.status(400).json({ message: `Question ${answer.questionId} not found or does not belong to test ${testId}` });
       }
+
       // Find the question for type validation
       const question = questions.find(q => q._id.toString() === answer.questionId);
       if (!question) {
         return res.status(400).json({ message: `Question ${answer.questionId} not found in test ${testId}` });
       }
+
       // Validate selectedAnswer based on question type
       if (question.type === 'mcq' && typeof answer.selectedAnswer !== 'string') {
         return res.status(400).json({ message: `selectedAnswer for MCQ must be a string for question ${answer.questionId}` });
       }
+
       if (question.type === 'checkbox' && !Array.isArray(answer.selectedAnswer)) {
         return res.status(400).json({ message: `selectedAnswer for checkbox must be an array for question ${answer.questionId}` });
       }
+
       if ((question.type === 'short' || question.type === 'paragraph') && typeof answer.selectedAnswer !== 'string') {
         return res.status(400).json({ message: `selectedAnswer for ${question.type} must be a string for question ${answer.questionId}` });
       }
@@ -118,7 +125,6 @@ const submitTestResult = async (req, res) => {
 const getResult = async (req, res) => {
   try {
     const userId = req.user.userId;
-
     if (!mongoose.isValidObjectId(userId)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
@@ -129,10 +135,7 @@ const getResult = async (req, res) => {
       .populate('testId', 'title testType examType')
       .populate('answers.questionId', 'text options correctAnswer');
 
-    if (!results || results.length === 0) {
-      return res.status(404).json({ message: 'No test results found for this user' });
-    }
-
+    // Return empty array if no results found
     res.status(200).json({
       message: 'Test results retrieved successfully',
       count: results.length,
@@ -189,10 +192,6 @@ const getAllResult = async (req, res) => {
       .populate('testId', 'title testType examType')
       .populate('answers.questionId', 'text options correctAnswer');
 
-    if (!results || results.length === 0) {
-      return res.status(404).json({ message: 'No test results found' });
-    }
-
     res.status(200).json({
       message: 'All test results retrieved successfully',
       count: results.length,
@@ -216,7 +215,6 @@ const getResultForAUser = async (req, res) => {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
 
-    // Verify user exists
     const user = await UserModel.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -227,10 +225,6 @@ const getResultForAUser = async (req, res) => {
       .populate('userId', 'name email')
       .populate('testId', 'title testType examType')
       .populate('answers.questionId', 'text options correctAnswer');
-
-    if (!results || results.length === 0) {
-      return res.status(404).json({ message: 'No test results found for this user' });
-    }
 
     res.status(200).json({
       message: 'Test results for user retrieved successfully',
@@ -260,10 +254,8 @@ const deleteTestResult = async (req, res) => {
       return res.status(404).json({ message: 'Test result not found' });
     }
 
-    // Remove result from user and test
     await UserModel.findByIdAndUpdate(result.userId, { $pull: { tests: result._id } });
     await TestModel.findByIdAndUpdate(result.testId, { $pull: { results: result._id } });
-
     await TestResultModel.findByIdAndDelete(resultId);
 
     res.status(200).json({ message: 'Test result deleted successfully' });
@@ -282,32 +274,31 @@ const getReviewData = async (req, res) => {
     if (!mongoose.isValidObjectId(userId)) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
+
     if (!mongoose.isValidObjectId(testId)) {
       return res.status(400).json({ message: 'Invalid test ID' });
     }
 
-    // Verify test exists
     const test = await TestModel.findById(testId).populate('questions');
     if (!test) {
       return res.status(404).json({ message: 'Test not found' });
     }
 
-    // Check if user is enrolled in the course (unless test is free or user is admin)
     if (!test.isFree && req.user.role !== 'admin') {
       const enrollment = await EnrollmentModel.findOne({
         userId,
         courseId: test.courseId,
         status: 'active'
       });
+
       if (!enrollment) {
         return res.status(403).json({ message: 'Not enrolled in this course or course is expired' });
       }
     }
 
-    // Fetch the latest test result for this user and test
     const result = await TestResultModel
       .findOne({ userId, testId })
-      .sort({ completedAt: -1 }) // Get the most recent attempt
+      .sort({ completedAt: -1 })
       .populate('userId', 'name email')
       .populate('testId', 'title testType examType')
       .populate('answers.questionId', 'text options correctAnswer explanation image');
@@ -328,4 +319,3 @@ const getReviewData = async (req, res) => {
 };
 
 export { submitTestResult, getResult, getSpecificResult, getAllResult, getResultForAUser, deleteTestResult, getReviewData };
-

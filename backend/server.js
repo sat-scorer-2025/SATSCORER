@@ -114,4 +114,4 @@ console.log('Environment Variables Loaded:', {
   REFRESH_TOKEN: process.env.REFRESH_TOKEN ? 'Set' : 'Missing',
 });
 
-server.listen(port, () => console.log(`Server started at port ${port}...`));
+server.listen(port, '0.0.0.0', () => console.log(`Server started at port ${port}...`));
