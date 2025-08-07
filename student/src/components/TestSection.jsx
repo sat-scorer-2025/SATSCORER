@@ -1,124 +1,57 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
+import { Link } from 'react-router-dom';
 
 const TestSection = () => {
   const tests = [
-    { name: 'Mock Tests', description: 'Simulate the real exam experience with full-length mock tests.', progress: 75 },
-    { name: 'Sectional Tests', description: 'Focus on specific sections to improve your weak areas.', progress: 60 },
-    { name: 'Topic-Wise Tests', description: 'Master individual topics with targeted practice tests.', progress: 45 },
-    { name: 'Adaptive Tests', description: 'Get personalized tests that adapt to your performance.', progress: 80 },
-    { name: 'Timed Quizzes', description: 'Practice under time pressure with short, focused quizzes.', progress: 30 },
-    { name: 'Past Papers', description: 'Solve previous years’ papers to understand exam patterns.', progress: 50 },
+    { name: 'Mock Tests', description: 'Simulate the real exam experience with full-length mock tests.' },
+    { name: 'Topic-Wise Tests', description: 'Master individual topics with targeted practice tests.' },
+    { name: 'Sectional Tests', description: 'Focus on specific sections to improve your weak areas.' },
   ];
 
-  // Duplicate tests for infinite scrolling
-  const infiniteTests = Array(5).fill(tests).flat().map((test, index) => ({
-    ...test,
-    id: `${test.name}-${index}`, // Unique key for each card
-  }));
-
-  const scrollRef = useRef(null);
-
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -336, behavior: 'smooth' }); // 336 = card width (320px) + space-x-6 (16px)
-    }
-  };
-
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 336, behavior: 'smooth' }); // 336 = card width (320px) + space-x-6 (16px)
-    }
-  };
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-
-    const handleScroll = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = container;
-      const threshold = 1; // Small threshold to prevent jitter
-      if (scrollLeft + clientWidth >= scrollWidth - threshold) {
-        container.scrollTo({ left: clientWidth, behavior: 'auto' });
-      } else if (scrollLeft <= threshold) {
-        container.scrollTo({ left: scrollWidth - clientWidth * 2, behavior: 'auto' });
-      }
-    };
-
-    container.scrollTo({ left: 336 * tests.length, behavior: 'auto' });
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [tests.length]);
-
   return (
-    <section className="bg-gradient-to-b from-gray-50 to-gray-100 py-16">
-      <div className="max-w-7xl mx-auto px-4 shadow-lg rounded-xl bg-white py-12">
-        <h2 className="text-4xl font-bold text-center bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text animate-fadeIn">
-          Tests
-        </h2>
-        <p className="text-xl text-gray-800 text-center mt-4 mb-12 animate-fadeIn">
-          Take your prep to the next level with our curated tests.<br />
-          Scroll to explore all available test types.
-        </p>
-        <div className="flex items-center justify-center mb-12">
-          <button
-            onClick={scrollLeft}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white w-20 h-20 flex items-center justify-center rounded-full shadow-md hover:scale-110 hover:shadow-lg transition-all duration-300 mr-6 text-4xl font-bold animate-bounce"
-            aria-label="Scroll Left"
-          >
-            ←
-          </button>
-          <div
-            ref={scrollRef}
-            className="flex flex-row overflow-hidden space-x-6"
-          >
-            {infiniteTests.map((test, index) => (
+    <>
+      {/* Import Google Fonts */}
+      <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800&display=swap"
+        rel="stylesheet"
+      />
+      <section className="bg-gradient-to-br from-purple-50 via-white to-indigo-100 py-6 sm:py-8 md:py-10 lg:py-12 xl:py-16 backdrop-blur-sm bg-opacity-90">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 bg-white shadow-lg rounded-2xl py-6 sm:py-8 md:py-10 lg:py-12">
+          <h2 className="text-2xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-extrabold text-center text-indigo-700 font-[Poppins] mb-6 sm:mb-8 md:mb-10">
+            Master Your Tests
+          </h2>
+          <p className="text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl text-center text-gray-600 mt-3 sm:mt-4 md:mt-5 mb-6 sm:mb-8 md:mb-10 font-[Poppins] font-medium">
+            Discover curated tests to boost your exam preparation.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6 lg:gap-8">
+            {tests.map((test) => (
               <div
-                key={test.id}
-                className="border-2 border-transparent bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg p-[2px] flex-none w-80"
+                key={test.name}
+                className="bg-gradient-to-r from-purple-50 to-indigo-100 rounded-xl p-[1px] w-full sm:w-60 md:w-64 lg:w-72 mx-auto"
               >
-                <div className="bg-white rounded-lg p-8 flex flex-col items-center text-center h-full hover:shadow-xl hover:scale-105 hover:rotate-1 transition-all duration-300 relative">
-                  {/* {test.name === 'Mock Tests' && index % tests.length === 0 && (
-                    <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-sm font-bold px-4 py-1 rounded-full shadow-md animate-shake">
-                      Featured Test
-                    </span>
-                  )} */}
-                  <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mb-4">
-                    <span className="text-2xl">📝</span>
+                <div className="bg-white rounded-xl p-3 sm:p-4 md:p-6 flex flex-col items-center text-center h-full hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out">
+                  <div className="w-8 sm:w-10 md:w-12 h-8 sm:h-10 md:h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mb-2 sm:mb-3 md:mb-4">
+                    <span className="text-base sm:text-lg md:text-xl">📝</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-indigo-900 mb-2 sm:mb-3 md:mb-4 font-[Poppins]">
                     {test.name}
                   </h3>
-                  <p className="text-lg text-gray-600 mb-6">
+                  <div className="hidden sm:block text-sm md:text-base lg:text-lg text-gray-600 mb-2 sm:mb-3 md:mb-4 font-[Poppins] font-normal">
                     {test.description}
-                  </p>
-                  <div className="w-full mb-4">
-                    <div className="text-sm text-gray-500 mb-1">
-                      Progress: {test.progress}%
-                    </div>
-                    <div className="w-full h-1 bg-gray-200 rounded-full">
-                      <div
-                        className="h-full bg-indigo-600 rounded-full"
-                        style={{ width: `${test.progress}%` }}
-                      ></div>
-                    </div>
                   </div>
-                  <button className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-md text-lg font-medium hover:animate-pulse transition-colors duration-200">
-                    Start Test
-                  </button>
+                  <Link
+                    to={`/tests/${test.name.toLowerCase().replace(/\s+/g, '-')}`}
+                    className="bg-gradient-to-r from-indigo-500 to-indigo-700 text-white px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm md:text-base font-semibold hover:from-indigo-600 hover:to-indigo-800 hover:shadow-lg hover:scale-105 transition-all duration-300 ease-in-out"
+                  >
+                    Start Now
+                  </Link>
                 </div>
               </div>
             ))}
           </div>
-          <button
-            onClick={scrollRight}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white w-20 h-20 flex items-center justify-center rounded-full shadow-md hover:scale-110 hover:shadow-lg transition-all duration-300 ml-6 text-4xl font-bold animate-bounce"
-            aria-label="Scroll Right"
-          >
-            →
-          </button>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 };
 

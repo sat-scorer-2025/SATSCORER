@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from '../context/AuthContext';
-import heroImg from '../assets/home-illustration.svg';
+import heroImg from '../assets/satscorerherop.png';
 import ExamSelectionModal from '../components/ExamSelectionModal';
 
 const Hero = () => {
@@ -85,7 +85,7 @@ const Hero = () => {
             <img
               src={heroImg}
               alt="SAT Scorer Hero Image"
-              className="w-56 md:w-64 lg:w-72 xl:w-80 2xl:w-96 h-auto object-cover"
+              className="w-80 md:w-96 lg:w-[28rem] xl:w-[32rem] 2xl:w-[36rem] h-auto object-cover"
             />
           </div>
         </div>
