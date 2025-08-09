@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { initializeSocket } from './utils/Socket.js';
 import { connectDB } from './config/mongoDb.js';
-import { connectCloudinary, upload } from './config/Cloudinary.js';
+import { connectCloudinary, upload } from './config/cloudinary.js';
 import userRouter from './routes/userRoutes.js';
 import courseRouter from './routes/courseRoutes.js';
 import testRouter from './routes/testRoutes.js';
